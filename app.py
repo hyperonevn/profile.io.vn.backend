@@ -1,13 +1,17 @@
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+import json
 
 app = FastAPI()
 
-@app.get("/", response_class=HTMLResponse)
-async def index(request: Request):
-    host = request.headers.get("host", "")
-    sub = host.split(".")[0] if "." in host else None
+with open("data/users.json", "r", encoding="utf-8") as f:
+    USERS = json.load(f)
 
-    if sub and sub != "profile":
-        return f"<h1>Trang hồ sơ: {sub}</h1><p>Đây là subdomain độc lập!</p>"
-    return "<h1>Trang chính của profile.io.vn</h1>"
+@app.get("/")
+async def get_user_by_subdomain(request: Request):
+    host = request.headers.get("host", "")
+    subdomain = host.split(".")[0] if "." in host else None
+
+    if subdomain in USERS:
+        return USERS[subdomain]
+    else:
+        return {"error": "User not found"}
